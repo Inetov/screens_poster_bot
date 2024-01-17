@@ -2,7 +2,7 @@ FROM python:3.10-alpine as base
 
 FROM base as builder
 
-RUN apk add build-base linux-headers
+RUN apk add build-base linux-headers libstdc++
 RUN mkdir /install
 WORKDIR /install
 
