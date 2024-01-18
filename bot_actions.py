@@ -9,23 +9,26 @@ from telebot.types import (
 from subprocess import getoutput
 from pathlib import Path
 
+_HELP_MESSAGE = """
+Обрезает получаемые картинки и сохраняет в очередь.
+Пересылает в канал "<a href="{c_link}">{c_name}</a>" по кнопке.
+
+Команды:
+/queue - показать очередь
+/version - текущая версия
+/restart - перезапуск с обновлённым кодом
+/status - вывести и обновлять сообщение со статусом
+/remove_status - убрать сообщение со статусом
+"""
+
 
 def get_help(envs: MyEnvs):
     """ справка по боту (команда /help) """
 
-    channel_name = envs.BOT.get_chat(envs.CHANNEL_ID).title
+    c_name = envs.BOT.get_chat(envs.CHANNEL_ID).title
+    c_link = envs.BOT.get_chat(envs.CHANNEL_ID).invite_link
 
-    return f"""
-    Пересылает скриншоты в канал {channel_name}
-    Умеет обрезать их и хранить очередь, если нужно.
-
-    Команды:
-    /queue - показать очередь
-    /version - текущая версия
-    /restart - перезапуск с обновлённым кодом
-    /status - вывести и обновлять сообщение со статусом
-    /remove_status - убрать сообщение со статусом
-    """
+    return _HELP_MESSAGE.format(c_name=c_name, c_link=c_link)
 
 
 def get_version():

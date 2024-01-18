@@ -30,7 +30,7 @@ def process_message(message: Message, envs: MyEnvs):
     else:
         match isinstance(message.text, str) and message.text.lower():
             case "/help":
-                bot_actions.get_help(envs)
+                return bot_actions.get_help(envs)
 
             case "/status":
                 # тут просто создаётся файл, далее его прочитает
