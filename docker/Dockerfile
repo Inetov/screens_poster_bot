@@ -1,4 +1,6 @@
-FROM python:3.11-bullseye as base
+# попытка сделать легковесный контейнер провалилась на требованиях OpenCV
+
+FROM python:3.11-slim as base
 
 FROM base as builder
 

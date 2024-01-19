@@ -11,15 +11,7 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "envFile": "${workspaceFolder}/secrets/.env",
-            "justMyCode": true
-        },
-        {
-            "name": "Selected File",
-            "type": "python",
-            "request": "launch",
-            "program": "files.py",
-            "console": "integratedTerminal",
-            "envFile": "${workspaceFolder}/secrets/.env",
+            "cwd": "${workspaceFolder}",
             "justMyCode": true
         },
         {

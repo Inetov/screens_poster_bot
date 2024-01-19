@@ -108,6 +108,8 @@ def delete_next_pin_message(message: Message, envs: MyEnvs):
 
 
 def save_biggest_image(envs: MyEnvs, sizes: list[PhotoSize] | None):
+    """ Сохраняет самый большой файл и возвращает путь к созданному. """
+
     assert sizes
     # по идее не может быть сообщения с фотками и пустым массивом, но...
 
@@ -115,10 +117,10 @@ def save_biggest_image(envs: MyEnvs, sizes: list[PhotoSize] | None):
 
     file_info = envs.BOT.get_file(biggest.file_id)
     suffix = Path(file_info.file_path).suffix
-    new_path = Path(f"{envs.QUEUE_DIR}/{file_info.file_unique_id}{suffix}")
-    if new_path.exists():
-        return  # предполагаем, что id таки уникальный
+    new_path = Path(f"{envs.UPLOADED_DIR}/{file_info.file_unique_id}{suffix}")
+    if not new_path.exists():  # предполагаем, что id таки уникальный
+        downloaded_file = envs.BOT.download_file(file_info.file_path)
+        with open(new_path, "wb") as new_file:
+            new_file.write(downloaded_file)
 
-    downloaded_file = envs.BOT.download_file(file_info.file_path)
-    with open(new_path, "wb") as new_file:
-        new_file.write(downloaded_file)
+    return new_path.as_posix()

@@ -33,13 +33,6 @@ def ready_check():
     bot_info = envs.BOT.get_me()
     logging.info("Инициализация бота, ответ: %s", bot_info)
 
-# def get_buttons():
-#     btns = [telebot.types.KeyboardButton(f"{x + 1}") for x in range(3)]
-#     return (
-#         telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
-#         .row(*btns)
-#     )
-
 # endregion
 
 
@@ -71,12 +64,11 @@ ready_check()
 
 def background_processor():
     while True:
-        queue_processor.process_uploaded_images(envs)
         queue_processor.update_pinned_message(envs)
         time.sleep(3)
 
 
-threading.Thread(target=background_processor).start()
+threading.Thread(target=background_processor, daemon=True).start()
 
 bot.infinity_polling(
     timeout=10,
