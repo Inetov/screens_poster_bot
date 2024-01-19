@@ -1,6 +1,5 @@
 from my_envs import MyEnvs
 from typing import Sequence
-from os import listdir, remove
 from telebot.types import (
     Message,
     InputMediaPhoto,
@@ -8,6 +7,7 @@ from telebot.types import (
 )
 from subprocess import getoutput
 from pathlib import Path
+
 
 _HELP_MESSAGE = """
 Обрезает получаемые картинки и сохраняет в очередь.
@@ -38,31 +38,31 @@ def get_version():
 
 
 def pull_repo():
-    pull_cmd = "git pull"
+    pull_cmd = "git pull --rebase"
     return getoutput(pull_cmd)
 
 
 def get_queue_count(envs: MyEnvs):
-    return len(listdir(envs.QUEUE_DIR))
+    return len(list(envs.QUEUE_DIR.glob(envs.IMAGES_GLOB_PATTERN)))
 
 
 def get_queue_images(envs: MyEnvs, with_caption=False, delete=False) -> Sequence[InputMediaPhoto]:
     max_display = 10
 
     result = []
-    # TODO: добавить сортировку по дате?
-    queue_files = listdir(envs.QUEUE_DIR)
+    queue_files = list(envs.QUEUE_DIR.glob(envs.IMAGES_GLOB_PATTERN))
+    queue_files.sort(key=lambda x: x.stat().st_ctime_ns)
+
     msg = [f"Всего изображений в очереди: {len(queue_files)}"]
 
     if len(queue_files) > max_display:
         queue_files = queue_files[:max_display]
         msg.append(f"Вот первые {max_display}")
     for file in queue_files:
-        path = f"{envs.QUEUE_DIR.as_posix()}/{file}"
-        with open(path, 'rb') as photo:
+        with open(file, 'rb') as photo:
             result.append(InputMediaPhoto(photo.read()))
             if delete:
-                remove(photo.name)
+                file.unlink()
 
     if result and with_caption:
         result[0].caption = '\n'.join(msg)

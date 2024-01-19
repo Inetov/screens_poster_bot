@@ -2,7 +2,6 @@ from my_envs import MyEnvs
 import bot_actions
 from telebot.apihelper import ApiTelegramException
 from pathlib import Path
-from os import listdir
 import image_processing as imp
 from telebot.util import quick_markup
 

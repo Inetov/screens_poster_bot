@@ -11,22 +11,25 @@ class MyEnvs:
         'BOT_TOKEN': None,
         'ADMIN_USER_ID': lambda v: int(v),
         'CHANNEL_ID': lambda v: int(v),
-        'CROP_DEBUG': lambda v: bool(v)
+        'CROP_DEBUG': lambda v: bool(v),
     }
     _DATA_DIR = 'data'
+
+    # -
 
     QUEUE_DIR = Path(_DATA_DIR, 'queue')
     UPLOADED_DIR = Path(_DATA_DIR, 'uploaded')
     TEMP_DIR = Path(_DATA_DIR, 'temp')
 
+    BOT: TeleBot
+
     BOT_TOKEN: str
     ADMIN_USER_ID: int
     CHANNEL_ID: int
     CROP_DEBUG: bool
+    IMAGES_GLOB_PATTERN: str = environ.get('IMAGES_GLOB_PATTERN', "*.jpg")
 
-    BOT: TeleBot
-
-    STATUS_MESSAGE = "Изображений в очереди:"
+    STATUS_MESSAGE = "Изображений в очереди (/queue) :"
     STATUS_MESSAGE_FILE = Path(_DATA_DIR, 'status_msg.txt')
 
     def __init__(self) -> None:

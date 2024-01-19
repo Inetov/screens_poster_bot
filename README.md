@@ -16,3 +16,5 @@
 `CROP_DEBUG` - создавать файлы сравнения для отладки (папка `data/temp`)
 
 `REPO_URL` - путь к репозиторию (SSH), например: `git@github.com:Inetov/screens_poster_bot.git`
+
+`IMAGES_GLOB_PATTERN` - glob паттер для поиска изображений в локальных папках. По-умолчанию `*.jpg`
