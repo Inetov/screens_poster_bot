@@ -38,8 +38,9 @@ def ready_check():
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_handler(cbq: telebot.types.CallbackQuery):
-    if cbq.data == 'queue_send':
-        result = handlers.send_queue_to_channel(envs)
+    method, *args = cbq.data.split()
+    if method == 'queue_send' and args[0].isnumeric():
+        result = handlers.send_queue_to_channel(envs, count=int(args[0]))
         bot.answer_callback_query(cbq.id, text=result)
 
 
@@ -68,7 +69,14 @@ def background_processor():
         time.sleep(3)
 
 
+def auto_sender():
+    while True:
+        handlers.send_queue_to_channel(envs, 1)
+        time.sleep(60*60)   # раз в час
+
+
 threading.Thread(target=background_processor, daemon=True).start()
+threading.Thread(target=auto_sender, daemon=True).start()
 
 bot.infinity_polling(
     timeout=10,

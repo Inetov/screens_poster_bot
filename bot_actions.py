@@ -46,18 +46,23 @@ def get_queue_count(envs: MyEnvs):
     return len(list(envs.QUEUE_DIR.glob(envs.IMAGES_GLOB_PATTERN)))
 
 
-def get_queue_images(envs: MyEnvs, with_caption=False, delete=False) -> Sequence[InputMediaPhoto]:
-    max_display = 10
+def get_queue_images(envs: MyEnvs, count=10, with_caption=False, delete=False) -> Sequence[InputMediaPhoto]:
+    """ Возвращает указанное количество изображений из очереди,
+    отсортированной по дате изменения.
+     Не более 10 за раз. """
+
+    # не будем возвращать больше 10 за раз
+    number_to_display = count if count <= 10 else 10
 
     result = []
     queue_files = list(envs.QUEUE_DIR.glob(envs.IMAGES_GLOB_PATTERN))
-    queue_files.sort(key=lambda x: x.stat().st_ctime_ns)
+    queue_files.sort(key=lambda x: x.stat().st_mtime_ns)
 
     msg = [f"Всего изображений в очереди: {len(queue_files)}"]
 
-    if len(queue_files) > max_display:
-        queue_files = queue_files[:max_display]
-        msg.append(f"Вот первые {max_display}")
+    if len(queue_files) > number_to_display:
+        queue_files = queue_files[:number_to_display]
+        msg.append(f"Вот первые {number_to_display}")
     for file in queue_files:
         with open(file, 'rb') as photo:
             result.append(InputMediaPhoto(photo.read()))

@@ -5,8 +5,11 @@ from queue_processor import process_one_image
 from os.path import exists
 
 
-def send_queue_to_channel(envs: MyEnvs):
-    queue_images = bot_actions.get_queue_images(envs, delete=True)
+def send_queue_to_channel(envs: MyEnvs, count: int):
+    """ Отправляет в канал указанное количество изображений.
+    Удаляет их из очереди! """
+
+    queue_images = bot_actions.get_queue_images(envs, count=count, delete=True)
     imgs_cnt = len(queue_images)
     if imgs_cnt > 1:
         envs.BOT.send_media_group(
@@ -49,7 +52,9 @@ def process_message(message: Message, envs: MyEnvs):
                 bot_actions.remove_status_message(envs)
 
             case "/queue":
-                queue_images = bot_actions.get_queue_images(envs, True)
+                queue_images = bot_actions.get_queue_images(envs,
+                                                            with_caption=True,
+                                                            delete=False)
                 if len(queue_images) > 1:
                     envs.BOT.send_media_group(
                         media=queue_images,  # type: ignore
