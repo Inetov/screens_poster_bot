@@ -25,16 +25,16 @@ def crop_sreenshot(image, threshold=10, min_area_percentage=0.1):
     contours, _ = cv2.findContours(
         thresholded, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-    # минимальная область для сохранения
-    min_contour_area = min_area_percentage * \
-        (thresholded.shape[0] * thresholded.shape[1])
+    # # минимальная область для сохранения
+    # min_contour_area = min_area_percentage * \
+    #     (thresholded.shape[0] * thresholded.shape[1])
 
-    # контуры, размер которых больше min_contour_area
-    large_contours = [contour for contour in contours if cv2.contourArea(
-        contour) > min_contour_area]
+    # # контуры, размер которых больше min_contour_area
+    # large_contours = [contour for contour in contours if cv2.contourArea(
+    #     contour) > min_contour_area]
 
     mask = np.zeros_like(thresholded)
-    cv2.drawContours(mask, large_contours, -1, 255, thickness=cv2.FILLED)
+    cv2.drawContours(mask, contours, -1, 255, thickness=cv2.FILLED)
 
     # Bitwise AND the original image with the mask to keep only the white rectangles
     result = cv2.bitwise_and(image, image, mask=mask)
