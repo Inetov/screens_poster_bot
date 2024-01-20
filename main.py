@@ -71,8 +71,8 @@ def background_processor():
 
 def auto_sender():
     while True:
-        handlers.send_queue_to_channel(envs, 1)
         time.sleep(60*60)   # раз в час
+        handlers.send_queue_to_channel(envs, 1)
 
 
 threading.Thread(target=background_processor, daemon=True).start()
