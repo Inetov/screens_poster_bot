@@ -1,7 +1,8 @@
+from dataclasses import dataclass
 from os import environ
 from pathlib import Path
+
 from telebot import TeleBot
-from dataclasses import dataclass
 
 
 @dataclass

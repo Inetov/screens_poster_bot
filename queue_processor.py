@@ -1,9 +1,11 @@
-from my_envs import MyEnvs
-import bot_actions
-from telebot.apihelper import ApiTelegramException
 from pathlib import Path
-import image_processing as imp
+
+from telebot.apihelper import ApiTelegramException
 from telebot.util import quick_markup
+
+import bot_actions
+import image_processing as imp
+from my_envs import MyEnvs
 
 
 def process_one_image(image_path: str | Path, envs: MyEnvs):
@@ -26,7 +28,7 @@ def update_pinned_message(envs: MyEnvs):
     sfile = envs.STATUS_MESSAGE_FILE.as_posix()
     cnt = bot_actions.get_queue_count(envs)
     markup = quick_markup({
-        '➡️ Отправить 10!': {'callback_data': 'queue_send 10'}
+        '➡️ Отправить 1!': {'callback_data': 'queue_send 1'}
     }, row_width=1)
     message_args = {
         'chat_id': envs.ADMIN_USER_ID,

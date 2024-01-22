@@ -1,31 +1,35 @@
 import logging
-import telebot
-from my_envs import MyEnvs
-import handlers
-import queue_processor
-import time
 import threading
-import schedule
+import time
 from random import randrange
 
+import schedule
+import telebot
 
-# region инициализация логгирования
+import handlers
+import queue_processor
+from my_envs import MyEnvs
 
+
+# region инициализации
+
+# логирование
 log_format = ("[%(asctime)s] %(levelname)s "
               "[%(filename)s.%(funcName)s] %(message)s")
 logging.basicConfig(format=log_format, level=logging.INFO)
 
-# endregion
 
-# инициализация переменных окружения
+# переменные окружения
 envs = MyEnvs()
 
 _number_of_messages = 0
 """ Сколько сообщений осталось отправить """
 
-# инициализация бота
+# бот
 bot = telebot.TeleBot(envs.BOT_TOKEN, parse_mode='HTML')
 envs.BOT = bot
+
+# endregion
 
 # region служебные функции
 
@@ -60,7 +64,8 @@ def endless_sending():
         global _number_of_messages
 
         if _number_of_messages == 0:
-            time.sleep(60)  # не нужно проверять слишком часто
+            wait_seconds = randrange(50, 3*60)
+            time.sleep(wait_seconds)  # не нужно проверять слишком часто
             continue
 
         resp = handlers.send_queue_to_channel(envs, count=1)
@@ -80,7 +85,7 @@ def add_messages():
 # endregion
 
 
-@bot.callback_query_handler(func=lambda call: True)
+@bot.callback_query_handler(func=lambda *_: True)
 def callback_handler(cbq: telebot.types.CallbackQuery):
     method, *args = cbq.data.split()
     if method == 'queue_send' and args[0].isnumeric():

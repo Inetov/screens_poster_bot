@@ -1,8 +1,10 @@
-import bot_actions
+from os.path import exists
+
 from telebot.types import Message
+
+import bot_actions
 from my_envs import MyEnvs
 from queue_processor import process_one_image
-from os.path import exists
 
 
 def send_queue_to_channel(envs: MyEnvs, count: int):
@@ -32,10 +34,7 @@ def process_message(message: Message, envs: MyEnvs):
         src_path = bot_actions.save_biggest_image(envs, message.photo)
         processed_path = process_one_image(src_path, envs)
         if exists(processed_path):
-            # предполагаем, что если размер нового меньше, то всё ок
             envs.BOT.delete_message(chat_id, message.message_id)
-        # l = bot_actions.get_queue_count(envs)
-        # return f"Сохранил! Изображений в очереди: {l}"
     else:
         match isinstance(message.text, str) and message.text.lower():
             case "/help":

@@ -1,12 +1,10 @@
-from my_envs import MyEnvs
-from typing import Sequence
-from telebot.types import (
-    Message,
-    InputMediaPhoto,
-    PhotoSize,
-)
-from subprocess import getoutput
 from pathlib import Path
+from subprocess import getoutput
+from typing import Sequence
+
+from telebot.types import InputMediaPhoto, Message, PhotoSize
+
+from my_envs import MyEnvs
 
 
 _HELP_MESSAGE = """
