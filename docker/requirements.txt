@@ -1,6 +1,8 @@
-pyTelegramBotAPI==4.15.2
 numpy==1.26.3
-opencv-python==4.9.0.80
 opencv-python-headless
-watchdog==3.0.0
+opencv-python==4.9.0.80
 psutil==5.9.5
+pyTelegramBotAPI==4.15.2
+pytz
+schedule==1.2.1
+watchdog==3.0.0

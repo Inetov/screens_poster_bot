@@ -21,34 +21,6 @@ def process_one_image(image_path: str | Path, envs: MyEnvs):
     return queue_path.as_posix()
 
 
-# def process_uploaded_images(envs: MyEnvs):
-#     uploaded_files = listdir(envs.UPLOADED_DIR)
-#     if not uploaded_files:
-#         return
-
-#     # files_count = len(uploaded_files)
-#     for file_name in uploaded_files:
-#         img_path = Path(envs.UPLOADED_DIR, file_name)
-
-#         # TODO: по неизвестной причине срабатывает через раз (потоки?)
-#         if envs.CROP_DEBUG:
-#             # Создаём файлы сравнений и сохраняем в TEMP_DIR
-#             debug_path = Path(envs.TEMP_DIR, file_name)
-#             imp.create_debug_image(
-#                 img_path.as_posix(), debug_path.as_posix())
-
-#         queue_path = Path(envs.QUEUE_DIR, file_name)
-#         imp.create_cropped_image(
-#             img_path.as_posix(), queue_path.as_posix())
-#         img_path.unlink()  # удаляем обработанный файл из UPLOADED_DIR
-
-    # TODO: по неизвестной причине срабатывает через раз (потоки?)
-    # envs.BOT.send_message(
-    #     chat_id=envs.ADMIN_USER_ID,
-    #     text=(f"Обработка загруженных изображений завершена: {files_count}"
-    #           "\nОни ожидают в очереди: /queue"))
-
-
 def update_pinned_message(envs: MyEnvs):
     bot = envs.BOT
     sfile = envs.STATUS_MESSAGE_FILE.as_posix()

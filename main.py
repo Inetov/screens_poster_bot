@@ -5,6 +5,8 @@ import handlers
 import queue_processor
 import time
 import threading
+import schedule
+from random import randrange
 
 
 # region инициализация логгирования
@@ -17,6 +19,9 @@ logging.basicConfig(format=log_format, level=logging.INFO)
 
 # инициализация переменных окружения
 envs = MyEnvs()
+
+_number_of_messages = 0
+""" Сколько сообщений осталось отправить """
 
 # инициализация бота
 bot = telebot.TeleBot(envs.BOT_TOKEN, parse_mode='HTML')
@@ -32,6 +37,45 @@ def ready_check():
     assert envs.BOT
     bot_info = envs.BOT.get_me()
     logging.info("Инициализация бота, ответ: %s", bot_info)
+
+# endregion
+
+# region фоновые потоки
+
+
+def background_ticks():
+    """ Обновление статуса, обработка расписаний (schedule)
+    и прочие мелкие действия """
+
+    while True:
+        queue_processor.update_pinned_message(envs)  # статус
+        schedule.run_pending()  # расписания
+        time.sleep(3)
+
+
+def endless_sending():
+    """ Отправка сообщений из очереди """
+
+    while True:
+        global _number_of_messages
+
+        if _number_of_messages == 0:
+            time.sleep(60)  # не нужно проверять слишком часто
+            continue
+
+        resp = handlers.send_queue_to_channel(envs, count=1)
+        _number_of_messages -= 1
+        wait_seconds = randrange(20*60, 30*60)
+        logging.info(f"Ответ: '{resp}', ждём: {wait_seconds // 60} мин, "
+                     f"{wait_seconds % 60} сек.")
+        time.sleep(wait_seconds)
+
+
+def add_messages():
+    """ Обновляет глобальную переменную `_number_of_messages` """
+
+    global _number_of_messages
+    _number_of_messages = 5
 
 # endregion
 
@@ -62,21 +106,9 @@ def get_text_messages(message: telebot.types.Message):
 
 ready_check()
 
-
-def background_processor():
-    while True:
-        queue_processor.update_pinned_message(envs)
-        time.sleep(3)
-
-
-def auto_sender():
-    while True:
-        time.sleep(60*60)   # раз в час
-        handlers.send_queue_to_channel(envs, 1)
-
-
-threading.Thread(target=background_processor, daemon=True).start()
-threading.Thread(target=auto_sender, daemon=True).start()
+schedule.every().day.at("12:00", "Europe/Moscow").do(add_messages)
+threading.Thread(target=background_ticks, daemon=True).start()
+threading.Thread(target=endless_sending, daemon=True).start()
 
 bot.infinity_polling(
     timeout=10,
