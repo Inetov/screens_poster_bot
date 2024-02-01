@@ -26,7 +26,11 @@ _number_of_messages = 0
 """ Сколько сообщений осталось отправить """
 
 # бот
-bot = telebot.TeleBot(envs.BOT_TOKEN, parse_mode='HTML')
+bot = telebot.TeleBot(
+    envs.BOT_TOKEN,
+    parse_mode='HTML',
+    exception_handler=handlers.MyExceptionHandler
+)
 envs.BOT = bot
 
 # endregion

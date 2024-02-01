@@ -1,5 +1,8 @@
+import logging
 from os.path import exists
+from time import sleep
 
+from telebot import ExceptionHandler
 from telebot.types import Message
 
 import bot_actions
@@ -34,6 +37,7 @@ def process_message(message: Message, envs: MyEnvs):
         src_path = bot_actions.save_biggest_image(envs, message.photo)
         processed_path = process_one_image(src_path, envs)
         if exists(processed_path):
+            # add telebot.apihelper.ApiTelegramException
             envs.BOT.delete_message(chat_id, message.message_id)
     else:
         match isinstance(message.text, str) and message.text.lower():
@@ -76,3 +80,20 @@ def process_message(message: Message, envs: MyEnvs):
 
             case _:
                 return "Я тебя не понимаю. Напиши /help."
+
+
+class MyExceptionHandler(ExceptionHandler):
+
+    def handle(self, exception=None):
+        wait_seconds = 60
+        logging.error(
+            "Произошла ошибка %(ex_self)s, %(ex)s. "
+            "Ждём %(sec)s и продолжаем как ни в чём не бывало.",
+            {
+                'ex_self': repr(self),
+                'ex': repr(exception),
+                'sec': wait_seconds,
+            }
+        )
+        sleep(wait_seconds)
+        return True
