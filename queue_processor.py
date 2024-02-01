@@ -28,7 +28,7 @@ def update_pinned_message(envs: MyEnvs):
     sfile = envs.STATUS_MESSAGE_FILE.as_posix()
     cnt = bot_actions.get_queue_count(envs)
     markup = quick_markup({
-        '➡️ Отправить 1!': {'callback_data': 'queue_send 1'}
+        '➡️🖼️ 1!': {'callback_data': 'queue_send 1'}
     }, row_width=1)
     message_args = {
         'chat_id': envs.ADMIN_USER_ID,
