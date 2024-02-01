@@ -29,7 +29,6 @@ _number_of_messages = 0
 bot = telebot.TeleBot(
     envs.BOT_TOKEN,
     parse_mode='HTML',
-    exception_handler=handlers.MyExceptionHandler
 )
 envs.BOT = bot
 

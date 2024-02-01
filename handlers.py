@@ -80,20 +80,3 @@ def process_message(message: Message, envs: MyEnvs):
 
             case _:
                 return "Я тебя не понимаю. Напиши /help."
-
-
-class MyExceptionHandler(ExceptionHandler):
-
-    def handle(self, exception=None):
-        wait_seconds = 60
-        logging.error(
-            "Произошла ошибка %(ex_self)s, %(ex)s. "
-            "Ждём %(sec)s и продолжаем как ни в чём не бывало.",
-            {
-                'ex_self': repr(self),
-                'ex': repr(exception),
-                'sec': wait_seconds,
-            }
-        )
-        sleep(wait_seconds)
-        return True
