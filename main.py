@@ -130,7 +130,6 @@ bot.infinity_polling(
     timeout=10,
     long_polling_timeout=30,
     interval=3,  # из базового polling
-    non_stop=True,  # из базового polling
     logger_level=logging.WARNING,
     restart_on_change=True,
     path_to_watch=__file__,
