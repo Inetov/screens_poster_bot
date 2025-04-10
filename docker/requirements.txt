@@ -2,7 +2,7 @@ numpy==1.26.3
 opencv-python-headless
 opencv-python==4.9.0.80
 psutil==5.9.5
-pyTelegramBotAPI==4.15.2
+pyTelegramBotAPI==4.26.0
 pytz
 schedule==1.2.1
 watchdog==3.0.0

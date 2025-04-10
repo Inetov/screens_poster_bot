@@ -9,7 +9,7 @@ import telebot
 import handlers
 import queue_processor
 from my_envs import MyEnvs
-
+from settings import Settings
 
 # region инициализации
 
@@ -22,8 +22,8 @@ logging.basicConfig(format=log_format, level=logging.INFO)
 # переменные окружения
 envs = MyEnvs()
 
-_number_of_messages = 0
-""" Сколько сообщений осталось отправить """
+# БД
+envs.SETTINGS = Settings("data/settings.json")
 
 # бот
 bot = telebot.TeleBot(
@@ -64,26 +64,34 @@ def endless_sending():
     """ Отправка сообщений из очереди """
 
     while True:
-        global _number_of_messages
+        messages_to_send = envs.SETTINGS.get("number_of_messages_to_send")
 
-        if _number_of_messages == 0:
-            wait_seconds = randrange(50, 3*60)
-            time.sleep(wait_seconds)  # не нужно проверять слишком часто
+        if not messages_to_send:
+            time.sleep(60)  # не нужно проверять слишком часто
             continue
 
         resp = handlers.send_queue_to_channel(envs, count=1)
-        _number_of_messages -= 1
+        envs.SETTINGS.set("number_of_messages_to_send", messages_to_send - 1)
         wait_seconds = randrange(20*60, 30*60)
-        logging.info(f"Ответ: '{resp}', ждём: {wait_seconds // 60} мин, "
-                     f"{wait_seconds % 60} сек.")
+        logging.info(
+            f"Отправили картинку, ответ: '{resp}', "
+            f"ждём: {wait_seconds // 60} мин, "
+            f"{wait_seconds % 60} сек."
+        )
         time.sleep(wait_seconds)
 
 
 def add_messages():
-    """ Обновляет глобальную переменную `_number_of_messages` """
+    """Обновляет переменную в настройках `number_of_messages_to_send`"""
 
-    global _number_of_messages
-    _number_of_messages = 5
+    add_amount = envs.SETTINGS.get("number_of_messages_per_day") or 1
+
+    messages_to_send = envs.SETTINGS.get("number_of_messages_to_send")
+    if messages_to_send and isinstance(messages_to_send, int):
+        add_amount += messages_to_send
+
+    envs.SETTINGS.set("number_of_messages_to_send", add_amount)
+
 
 # endregion
 
@@ -120,8 +128,10 @@ threading.Thread(target=endless_sending, daemon=True).start()
 
 bot.infinity_polling(
     timeout=10,
-    long_polling_timeout=5,
+    long_polling_timeout=30,
+    interval=3,  # из базового polling
+    non_stop=True,  # из базового polling
     logger_level=logging.WARNING,
     restart_on_change=True,
-    path_to_watch=__file__
+    path_to_watch=__file__,
 )

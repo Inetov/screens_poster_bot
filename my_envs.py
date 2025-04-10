@@ -4,6 +4,8 @@ from pathlib import Path
 
 from telebot import TeleBot
 
+from settings import Settings
+
 
 @dataclass
 class MyEnvs:
@@ -23,6 +25,7 @@ class MyEnvs:
     TEMP_DIR = Path(_DATA_DIR, 'temp')
 
     BOT: TeleBot
+    SETTINGS: Settings
 
     BOT_TOKEN: str
     ADMIN_USER_ID: int
