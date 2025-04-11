@@ -26,6 +26,7 @@ class MyEnvs:
 
     BOT: TeleBot
     SETTINGS: Settings
+    SETTINGS_FILE = Path(_DATA_DIR, "settings.json")
 
     BOT_TOKEN: str
     ADMIN_USER_ID: int
@@ -34,7 +35,6 @@ class MyEnvs:
     IMAGES_GLOB_PATTERN: str = environ.get('IMAGES_GLOB_PATTERN', "*.jpg")
 
     STATUS_MESSAGE = "Изображений в очереди (/queue) :"
-    STATUS_MESSAGE_FILE = Path(_DATA_DIR, 'status_msg.txt')
 
     def __init__(self) -> None:
         """ Проверяет наличие необходимых переменных окружения

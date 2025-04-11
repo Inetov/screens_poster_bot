@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 
 from telebot.apihelper import ApiTelegramException
@@ -6,6 +7,7 @@ from telebot.util import quick_markup
 import bot_actions
 import image_processing as imp
 from my_envs import MyEnvs
+from settings import Names
 
 
 def process_one_image(image_path: str | Path, envs: MyEnvs):
@@ -25,7 +27,9 @@ def process_one_image(image_path: str | Path, envs: MyEnvs):
 
 def update_pinned_message(envs: MyEnvs):
     bot = envs.BOT
-    sfile = envs.STATUS_MESSAGE_FILE.as_posix()
+    message_id = envs.SETTINGS.get(Names.STATE_STATUS_MESSAGE_ID)
+    if not message_id:
+        return  # нет закрепа, нет сохранённого - нечего обновлять
     cnt = bot_actions.get_queue_count(envs)
     markup = quick_markup({
         '➡️🖼️ 1!': {'callback_data': 'queue_send 1'}
@@ -40,29 +44,34 @@ def update_pinned_message(envs: MyEnvs):
     if pm:
         if pm.text == message_args['text']:
             return  # есть закреп уже с нужной инфой
-        message_args['message_id'] = pm.message_id
-    elif not envs.STATUS_MESSAGE_FILE.exists():
-        return  # нет закрепа, нет сохранённого - нечего обновлять
+        message_args["message_id"] = pm.message_id
     else:
-        message_args['message_id'] = bot_actions.get_id_from_file(sfile)
+        message_args["message_id"] = message_id
 
     try:
         bot.edit_message_text(**message_args)
-    except ApiTelegramException:    # не получилось изменить
-        message_args.pop('message_id', None)  # будем создавать новое
+    except ApiTelegramException as ex:  # не получилось изменить
+        # но сюда же, видимо, попадаем и при других ошибках, надо бы отладить:
+        logging.warning(
+            "Поймали ошибку типа %s, считаем, что не удалось обновить закреп, "
+            "создаём новый.",
+            type(ex),
+            exc_info=ex,
+        )
+        message_args.pop("message_id", None)  # будем создавать новое
         new_msg = bot.send_message(**message_args)
         bot.register_next_step_handler_by_chat_id(
             chat_id=envs.ADMIN_USER_ID,
             callback=bot_actions.delete_next_pin_message,
-            envs=envs
+            envs=envs,
         )
         bot.pin_chat_message(
             chat_id=envs.ADMIN_USER_ID,
             message_id=new_msg.message_id,
-            disable_notification=True
+            disable_notification=True,
         )
 
-        bot_actions.save_id_to_file(sfile, new_msg.message_id)
+        envs.SETTINGS.set(Names.STATE_STATUS_MESSAGE_ID, new_msg.message_id)
 
 
 def file_name_append(file_name, append: str):

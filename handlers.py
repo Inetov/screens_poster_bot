@@ -8,6 +8,7 @@ from telebot.types import Message
 import bot_actions
 from my_envs import MyEnvs
 from queue_processor import process_one_image
+from settings import Names
 
 
 def send_queue_to_channel(envs: MyEnvs, count: int):
@@ -45,13 +46,14 @@ def process_message(message: Message, envs: MyEnvs):
                 return bot_actions.get_help(envs)
 
             case "/status":
-                # тут просто создаётся файл, далее его прочитает
+                # тут просто создаётся не пустое значение, далее его прочитает
                 # метод update_pinned_message из фонового потока
                 # и не найдя такое сообщение - создаст новое
-                envs.STATUS_MESSAGE_FILE.write_text(str(-1))
+                envs.SETTINGS.set(Names.STATE_STATUS_MESSAGE_ID, -1)
             case "/remove_status":
-                if not envs.STATUS_MESSAGE_FILE.exists():
+                if not envs.SETTINGS.get(Names.STATE_STATUS_MESSAGE_ID):
                     return "Нечего убирать."
+
                 bot_actions.remove_status_message(envs)
 
             case "/queue":

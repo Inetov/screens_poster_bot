@@ -1,14 +1,20 @@
 import json
-import os
+from pathlib import Path
+
+
+class Names:
+    SETTIGS_MESSAGES_PER_DAY = "number_of_messages_per_day"
+    STATE_MESSAGES_TO_SEND = "state_number_of_messages_to_send"
+    STATE_STATUS_MESSAGE_ID = "state_status_message_id"
 
 
 class Settings:
-    _file_path: str
+    _file_path: Path
 
-    def __init__(self, file_path: str) -> None:
+    def __init__(self, file_path: Path) -> None:
         self._file_path = file_path
 
-        if not os.path.exists(self._file_path) or os.stat(self._file_path).st_size == 0:
+        if not file_path.exists() or file_path.stat().st_size == 0:
             self._load_default()
 
     def _set_all(self, object: dict):
