@@ -53,11 +53,12 @@ def update_pinned_message(envs: MyEnvs):
     except ApiTelegramException as ex:  # не получилось изменить
         # но сюда же, видимо, попадаем и при других ошибках, надо бы отладить:
         logging.warning(
-            "Поймали ошибку типа %s, считаем, что не удалось обновить закреп, "
-            "создаём новый.",
+            "Поймали ошибку типа %s, считаем, что не удалось обновить закреп",
             type(ex),
             exc_info=ex,
         )
+        return
+        # TODO: пока тут специально убрано создание нового, чтобы отловить нужную ошибку
         message_args.pop("message_id", None)  # будем создавать новое
         new_msg = bot.send_message(**message_args)
         bot.register_next_step_handler_by_chat_id(

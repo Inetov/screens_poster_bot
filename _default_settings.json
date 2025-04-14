@@ -1,3 +1,4 @@
 {
-    "number_of_messages_per_day": 5
+    "number_of_messages_per_day": 5,
+    "read_timeout": 90
 }

@@ -28,6 +28,7 @@ class MyEnvs:
     SETTINGS: Settings
     SETTINGS_FILE = Path(_DATA_DIR, "settings.json")
 
+    READ_TIMEOUT: int
     BOT_TOKEN: str
     ADMIN_USER_ID: int
     CHANNEL_ID: int

@@ -4,6 +4,8 @@ from pathlib import Path
 
 class Names:
     SETTIGS_MESSAGES_PER_DAY = "number_of_messages_per_day"
+    SETTING_READ_TIMEOUT = "read_timeout"
+
     STATE_MESSAGES_TO_SEND = "state_number_of_messages_to_send"
     STATE_STATUS_MESSAGE_ID = "state_status_message_id"
 

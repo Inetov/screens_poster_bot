@@ -25,7 +25,9 @@ def send_queue_to_channel(envs: MyEnvs, count: int):
     elif imgs_cnt == 1:
         envs.BOT.send_photo(
             photo=queue_images[0].media,
-            chat_id=envs.CHANNEL_ID)
+            chat_id=envs.CHANNEL_ID,
+            timeout=envs.READ_TIMEOUT * 2,  # фотки могут долго грузиться (х2)
+        )
         return f"Отправлено! {imgs_cnt}"
     else:
         return "В очереди ничего нет"

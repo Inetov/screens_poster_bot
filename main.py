@@ -24,6 +24,7 @@ envs = MyEnvs()
 
 # Настройки и состояние
 envs.SETTINGS = Settings(envs.SETTINGS_FILE)
+envs.READ_TIMEOUT = envs.SETTINGS.get(Names.SETTING_READ_TIMEOUT) or 30
 
 # бот
 bot = telebot.TeleBot(
