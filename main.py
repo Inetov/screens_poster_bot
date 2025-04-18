@@ -83,14 +83,18 @@ def endless_sending():
             continue
 
         resp = handlers.send_queue_to_channel(envs, count=1)
-        envs.SETTINGS.set(Names.STATE_MESSAGES_TO_SEND, messages_to_send - 1)
-        wait_seconds = randrange(20*60, 30*60)
-        logging.info(
-            f"Отправили картинку, ответ: '{resp}', "
-            f"ждём: {wait_seconds // 60} мин, "
-            f"{wait_seconds % 60} сек."
-        )
-        time.sleep(wait_seconds)
+        if "Отправлено" in resp:
+            envs.SETTINGS.set(Names.STATE_MESSAGES_TO_SEND, messages_to_send - 1)
+            wait_seconds = randrange(20 * 60, 30 * 60)
+            logging.info(
+                f"Отправили картинку, ответ: '{resp}', "
+                f"ждём: {wait_seconds // 60} мин, "
+                f"{wait_seconds % 60} сек."
+            )
+            time.sleep(wait_seconds)
+        else:
+            logging.info("Пришло время отправлять пост, но: %s", resp)
+            time.sleep(60)
 
 
 def add_messages():
@@ -98,11 +102,26 @@ def add_messages():
 
     add_amount = envs.SETTINGS.get(Names.SETTIGS_MESSAGES_PER_DAY) or 0
     # по идее тут всегда должна быть цифра, определённая в _default_settings.json
+    logging.info(
+        "Запущен метод добавления постов, планируется добавить: %s", add_amount
+    )
 
     if (p := envs.SETTINGS.get(Names.STATE_MESSAGES_TO_SEND)) and isinstance(p, int):
         add_amount += p
 
     envs.SETTINGS.set(Names.STATE_MESSAGES_TO_SEND, add_amount)
+    logging.info("Теперь сегодня на отправку: %s", add_amount)
+
+
+def no_luck_today():
+    """Очищает переменную в настройках `Settings.STATE_MESSAGES_TO_SEND`
+
+    (что бы не копились)"""
+
+    logging.info(
+        "Переменная конфига '%s' установлена на '0'.", Names.STATE_MESSAGES_TO_SEND
+    )
+    envs.SETTINGS.set(Names.STATE_MESSAGES_TO_SEND, 0)
 
 
 # endregion
@@ -135,6 +154,7 @@ def get_text_messages(message: telebot.types.Message):
 ready_check()
 
 schedule.every().day.at("12:00", "Europe/Moscow").do(add_messages)
+schedule.every().day.at("23:50", "Europe/Moscow").do(no_luck_today)
 threading.Thread(target=background_ticks, daemon=True).start()
 threading.Thread(target=endless_sending, daemon=True).start()
 
