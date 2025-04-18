@@ -56,9 +56,18 @@ def background_ticks():
     и прочие мелкие действия """
 
     while True:
-        queue_processor.update_pinned_message(envs)  # статус
-        schedule.run_pending()  # расписания
-        time.sleep(3)
+        try:
+            queue_processor.update_pinned_message(envs)  # статус
+            schedule.run_pending()  # расписания
+            time.sleep(3)
+        except Exception as ex:
+            if "timeout" in str(ex):
+                logging.error(
+                    "Поймали очередной таймаут, типа %s, но тут не страшно",
+                    type(ex),
+                    exc_info=True,
+                )
+            pass
 
 
 def endless_sending():
