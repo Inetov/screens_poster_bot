@@ -27,6 +27,8 @@ envs.SETTINGS = Settings(envs.SETTINGS_FILE)
 envs.READ_TIMEOUT = envs.SETTINGS.get(Names.SETTING_READ_TIMEOUT) or 30
 
 # бот
+telebot.apihelper.CONNECT_TIMEOUT = envs.READ_TIMEOUT
+telebot.apihelper.READ_TIMEOUT = envs.READ_TIMEOUT
 bot = telebot.TeleBot(
     envs.BOT_TOKEN,
     parse_mode='HTML',
