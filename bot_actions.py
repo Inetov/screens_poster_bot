@@ -5,7 +5,6 @@ from typing import Sequence
 from telebot.types import InputMediaPhoto, Message, PhotoSize
 
 from my_envs import MyEnvs
-from settings import Names, Settings
 
 _HELP_MESSAGE = """
 Обрезает получаемые картинки и сохраняет в очередь.
@@ -74,7 +73,7 @@ def get_queue_images(envs: MyEnvs, count=10, with_caption=False, delete=False) -
 
 
 def remove_status_message(envs: MyEnvs):
-    message_id = envs.SETTINGS.get(Names.STATE_STATUS_MESSAGE_ID)
+    message_id = envs.STATE.state_status_message_id
     if not message_id:
         return
     try:
@@ -84,7 +83,7 @@ def remove_status_message(envs: MyEnvs):
         }
         envs.BOT.unpin_chat_message(**msg_args)
         envs.BOT.delete_message(**msg_args)
-        envs.SETTINGS.set(Names.STATE_STATUS_MESSAGE_ID, 0)
+        envs.STATE.state_status_message_id = 0
     except Exception as ex:
         print(ex)
 

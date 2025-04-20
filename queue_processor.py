@@ -7,7 +7,6 @@ from telebot.util import quick_markup
 import bot_actions
 import image_processing as imp
 from my_envs import MyEnvs
-from settings import Names
 
 
 def process_one_image(image_path: str | Path, envs: MyEnvs):
@@ -27,7 +26,7 @@ def process_one_image(image_path: str | Path, envs: MyEnvs):
 
 def update_pinned_message(envs: MyEnvs):
     bot = envs.BOT
-    message_id = envs.SETTINGS.get(Names.STATE_STATUS_MESSAGE_ID)
+    message_id = envs.STATE.state_status_message_id
     if not message_id:
         return  # нет закрепа, нет сохранённого - нечего обновлять
     cnt = bot_actions.get_queue_count(envs)
@@ -72,7 +71,7 @@ def update_pinned_message(envs: MyEnvs):
             disable_notification=True,
         )
 
-        envs.SETTINGS.set(Names.STATE_STATUS_MESSAGE_ID, new_msg.message_id)
+        envs.STATE.state_status_message_id = new_msg.message_id
 
 
 def file_name_append(file_name, append: str):

@@ -6,17 +6,17 @@
     "configurations": [
         {
             "name": "Python: Current File",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
             "envFile": "${workspaceFolder}/secrets/.env",
             "cwd": "${workspaceFolder}",
-            "justMyCode": true
+            "justMyCode": false
         },
         {
             "name": "run BOT",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "main.py",
             "console": "integratedTerminal",

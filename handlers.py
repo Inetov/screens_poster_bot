@@ -8,7 +8,6 @@ from telebot.types import Message
 import bot_actions
 from my_envs import MyEnvs
 from queue_processor import process_one_image
-from settings import Names
 
 
 def send_queue_to_channel(envs: MyEnvs, count: int):
@@ -26,7 +25,7 @@ def send_queue_to_channel(envs: MyEnvs, count: int):
         envs.BOT.send_photo(
             photo=queue_images[0].media,
             chat_id=envs.CHANNEL_ID,
-            timeout=envs.READ_TIMEOUT * 2,  # фотки могут долго грузиться (х2)
+            timeout=envs.STATE.read_timeout * 2,  # фотки могут долго грузиться (х2)
         )
         return f"Отправлено! {imgs_cnt}"
     else:
@@ -51,9 +50,9 @@ def process_message(message: Message, envs: MyEnvs):
                 # тут просто создаётся не пустое значение, далее его прочитает
                 # метод update_pinned_message из фонового потока
                 # и не найдя такое сообщение - создаст новое
-                envs.SETTINGS.set(Names.STATE_STATUS_MESSAGE_ID, -1)
+                envs.STATE.state_status_message_id = -1
             case "/remove_status":
-                if not envs.SETTINGS.get(Names.STATE_STATUS_MESSAGE_ID):
+                if not envs.STATE.state_status_message_id:
                     return "Нечего убирать."
 
                 bot_actions.remove_status_message(envs)

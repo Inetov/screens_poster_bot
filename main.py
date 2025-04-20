@@ -9,13 +9,12 @@ import telebot
 import handlers
 import queue_processor
 from my_envs import MyEnvs
-from settings import Names, Settings
+from persist_state import State
 
 # region инициализации
 
 # логирование
-log_format = ("[%(asctime)s] %(levelname)s "
-              "[%(filename)s.%(funcName)s] %(message)s")
+log_format = "[%(asctime)s] %(levelname)s [%(filename)s.%(funcName)s] %(message)s"
 logging.basicConfig(format=log_format, level=logging.INFO)
 
 
@@ -23,15 +22,14 @@ logging.basicConfig(format=log_format, level=logging.INFO)
 envs = MyEnvs()
 
 # Настройки и состояние
-envs.SETTINGS = Settings(envs.SETTINGS_FILE)
-envs.READ_TIMEOUT = envs.SETTINGS.get(Names.SETTING_READ_TIMEOUT) or 30
+envs.STATE = State(data_path=envs.STATE_FILE, default_json_path="_default_settings.json")
 
 # бот
-telebot.apihelper.CONNECT_TIMEOUT = envs.READ_TIMEOUT
-telebot.apihelper.READ_TIMEOUT = envs.READ_TIMEOUT
+telebot.apihelper.CONNECT_TIMEOUT = envs.STATE.connect_timeout
+telebot.apihelper.READ_TIMEOUT = envs.STATE.read_timeout
 bot = telebot.TeleBot(
     envs.BOT_TOKEN,
-    parse_mode='HTML',
+    parse_mode="HTML",
 )
 envs.BOT = bot
 
@@ -48,14 +46,15 @@ def ready_check():
     bot_info = envs.BOT.get_me()
     logging.info("Инициализация бота, ответ: %s", bot_info)
 
+
 # endregion
 
 # region фоновые потоки
 
 
 def background_ticks():
-    """ Обновление статуса, обработка расписаний (schedule)
-    и прочие мелкие действия """
+    """Обновление статуса, обработка расписаний (schedule)
+    и прочие мелкие действия"""
 
     while True:
         try:
@@ -73,10 +72,10 @@ def background_ticks():
 
 
 def endless_sending():
-    """ Отправка сообщений из очереди """
+    """Отправка сообщений из очереди"""
 
     while True:
-        messages_to_send = envs.SETTINGS.get(Names.STATE_MESSAGES_TO_SEND)
+        messages_to_send = envs.STATE.state_number_of_messages_to_send
 
         if not messages_to_send:
             time.sleep(60)  # не нужно проверять слишком часто
@@ -84,44 +83,42 @@ def endless_sending():
 
         resp = handlers.send_queue_to_channel(envs, count=1)
         if "Отправлено" in resp:
-            envs.SETTINGS.set(Names.STATE_MESSAGES_TO_SEND, messages_to_send - 1)
+            envs.STATE.state_number_of_messages_to_send = messages_to_send - 1
             wait_seconds = randrange(20 * 60, 30 * 60)
             logging.info(
-                f"Отправили картинку, ответ: '{resp}', "
-                f"ждём: {wait_seconds // 60} мин, "
-                f"{wait_seconds % 60} сек."
+                "Отправили картинку, ответ: '%s', ждём: %s мин, %s сек.",
+                resp,
+                wait_seconds // 60,
+                wait_seconds % 60,
             )
             time.sleep(wait_seconds)
         else:
-            logging.info("Пришло время отправлять пост, но: %s", resp)
+            logging.debug("Пришло время отправлять пост, но: %s", resp)
+
             time.sleep(60)
 
 
 def add_messages():
-    """Обновляет переменную в настройках `Settings.STATE_MESSAGES_TO_SEND`"""
+    """Обновляет переменную в настройках `state_number_of_messages_to_send`"""
 
-    add_amount = envs.SETTINGS.get(Names.SETTIGS_MESSAGES_PER_DAY) or 0
+    add_amount = envs.STATE.number_of_messages_per_day or 0
     # по идее тут всегда должна быть цифра, определённая в _default_settings.json
-    logging.info(
-        "Запущен метод добавления постов, планируется добавить: %s", add_amount
-    )
+    logging.info("Запущен метод добавления постов, планируется добавить: %s", add_amount)
 
-    if (p := envs.SETTINGS.get(Names.STATE_MESSAGES_TO_SEND)) and isinstance(p, int):
+    if p := envs.STATE.state_number_of_messages_to_send:
         add_amount += p
 
-    envs.SETTINGS.set(Names.STATE_MESSAGES_TO_SEND, add_amount)
-    logging.info("Теперь сегодня на отправку: %s", add_amount)
+    envs.STATE.state_number_of_messages_to_send = add_amount
+    logging.info("Теперь Переменная 'state_number_of_messages_to_send' = %s", add_amount)
 
 
 def no_luck_today():
-    """Очищает переменную в настройках `Settings.STATE_MESSAGES_TO_SEND`
+    """Очищает переменную в настройках `state_number_of_messages_to_send`
 
     (что бы не копились)"""
 
-    logging.info(
-        "Переменная конфига '%s' установлена на '0'.", Names.STATE_MESSAGES_TO_SEND
-    )
-    envs.SETTINGS.set(Names.STATE_MESSAGES_TO_SEND, 0)
+    envs.STATE.state_number_of_messages_to_send = 0
+    logging.info("Переменная 'state_number_of_messages_to_send' установлена на '0'")
 
 
 # endregion
@@ -130,12 +127,12 @@ def no_luck_today():
 @bot.callback_query_handler(func=lambda *_: True)
 def callback_handler(cbq: telebot.types.CallbackQuery):
     method, *args = cbq.data.split()
-    if method == 'queue_send' and args[0].isnumeric():
+    if method == "queue_send" and args[0].isnumeric():
         result = handlers.send_queue_to_channel(envs, count=int(args[0]))
         bot.answer_callback_query(cbq.id, text=result)
 
 
-@bot.message_handler(content_types=['text', 'photo'])
+@bot.message_handler(content_types=["text", "photo"])
 def get_text_messages(message: telebot.types.Message):
     if message.from_user.id != envs.ADMIN_USER_ID:
         return  # не реагируем на сообщения других людей
@@ -160,7 +157,7 @@ threading.Thread(target=endless_sending, daemon=True).start()
 
 bot.infinity_polling(
     timeout=10,
-    long_polling_timeout=120,
+    long_polling_timeout=envs.STATE.read_timeout * 2,
     interval=3,  # из базового polling
     logger_level=logging.WARNING,
     restart_on_change=True,

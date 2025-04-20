@@ -1,0 +1,6 @@
+[tool.ruff]
+line-length = 100
+extend-select = ["G004"]
+
+[tool.mypy]
+disable_error_code = ["import-untyped"]
