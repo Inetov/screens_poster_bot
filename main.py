@@ -9,7 +9,7 @@ import telebot
 import handlers
 import queue_processor
 from my_envs import MyEnvs
-from persist_state import State
+from utils.persist_state import State
 
 # region инициализации
 
@@ -68,7 +68,7 @@ def background_ticks():
                     type(ex),
                     exc_info=True,
                 )
-            pass
+            logging.error("Неизвестная ошибка!", exc_info=True)
 
 
 def endless_sending():

@@ -4,7 +4,7 @@ from pathlib import Path
 
 from telebot import TeleBot
 
-from persist_state import State
+from utils.persist_state import State
 
 
 @dataclass
@@ -39,7 +39,7 @@ class MyEnvs:
     CROP_DEBUG: bool
     IMAGES_GLOB_PATTERN: str = environ.get("IMAGES_GLOB_PATTERN", "*.jpg")
 
-    STATUS_MESSAGE = "Изображений в очереди (/queue) :"
+    STATUS_MESSAGE = "Изображений в очереди (/queue) : {cnt}"
 
     def __init__(self) -> None:
         """Проверяет наличие необходимых переменных окружения

@@ -5,27 +5,19 @@ from pathlib import Path
 ENCODING = "utf-8"
 
 
-class State:
+class PersistStateBase:
     """Класс для сохранения состояния на диск.
 
-    Внимание! Вызывает чтение/запись файла при обращении к аттрибутам!
-
-    (кроме тех, что начинаются с `_`"""
-
-    # Вот тут предполагается указать все необходимые переменные
-
-    read_timeout: int
-    connect_timeout: int
-    number_of_messages_per_day: int
-    state_number_of_messages_to_send: int
-    state_status_message_id: int
-
-    # ----- ^
+    Вызывает чтение/запись файла при обращении к аттрибутам!\
+    (кроме тех, что начинаются с `_`)
+    
+    Однако: изменение файла извне не предполагается, по этому чтение кешируется,
+    если `stat` файла не изменился"""
 
     _data_path: Path
     _logger: Logger | None = None
 
-    _last_read_hash: int = 0
+    _last_read_hash = 0
 
     def _debug(self, *args, **kwargs):
         """Пишет сообщение с уровнем 'DEBUG', если `_logger` существует.
@@ -50,7 +42,7 @@ class State:
         default_json_path: str = "",
         logger: Logger | None = None,
     ) -> None:
-        """Создаёт преднастроенный экземпляр и создаёт путь для `data_path`, но не сам файл
+        """Возвращает настроенный экземпляр и создаёт путь для `data_path` (но не сам файл)
 
         Args:
             data_path (str, optional): Путь к файлу. По умолчанию: "data/state.json".
@@ -72,16 +64,19 @@ class State:
 
         self._logger = logger
 
+    def _update_self_from_file(self):
+        with open(self._data_path, "r", encoding=ENCODING) as f:
+            self.__dict__.update(json.load(f))
+        self._debug("Состояние прочитано из файла '%s'", self._data_path)
+
     def __getattribute__(self, name: str):
         if (
             not name.startswith("_")
             and self._data_path.exists()
             and hash(self._data_path.stat()) != self._last_read_hash
         ):
-            with open(self._data_path, "r", encoding=ENCODING) as f:
-                self.__dict__.update(json.load(f))
+            self._update_self_from_file()
             self._last_read_hash = hash(self._data_path.stat())
-            self._debug("Состояние прочитано из файла '%s'", self._data_path)
 
         return object.__getattribute__(self, name)
 

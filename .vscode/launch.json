@@ -12,6 +12,9 @@
             "console": "integratedTerminal",
             "envFile": "${workspaceFolder}/secrets/.env",
             "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            },
             "justMyCode": false
         },
         {
