@@ -1,7 +1,7 @@
-from .base import PersistStateBase as _base
+from .base import PersistStateBase
 
 
-class State(_base):
+class State(PersistStateBase):
     """Атрибуты класса сохраняются в файл при изменении"""
 
     read_timeout: int

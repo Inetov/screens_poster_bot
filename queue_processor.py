@@ -90,6 +90,7 @@ def update_pinned_message(envs: MyEnvs):
                 to_wait_str = "НЕТ ЗНАЧЕНИЯ"
 
             logging.warning("Похоже, что нас забанил сервер! Ждать: %s\n%s", to_wait_str, repr(ex))
+            # TODO: может добавить ожидание прям тут?
             return
 
         # но сюда же, видимо, попадаем и при других ошибках, надо бы отладить:
@@ -98,12 +99,13 @@ def update_pinned_message(envs: MyEnvs):
             exc_info=ex,
         )
 
-    except Exception as ex:
-        logging.error(
-            "Поймали ошибку типа %s, при обновлении закрепа:",
-            type(ex),
-            exc_info=ex,
-        )
+    # необработанную тут ошибку поймает вызывающий метод
+    # except Exception as ex:
+    #     logging.error(
+    #         "Поймали ошибку типа %s, при обновлении закрепа:",
+    #         type(ex),
+    #         exc_info=ex,
+    #     )
 
 
 def file_name_append(file_name, append: str):

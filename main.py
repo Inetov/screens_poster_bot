@@ -63,12 +63,9 @@ def background_ticks():
             time.sleep(3)
         except Exception as ex:
             if "timeout" in str(ex):
-                logging.error(
-                    "Поймали очередной таймаут, типа %s, но тут не страшно",
-                    type(ex),
-                    exc_info=True,
-                )
-            logging.error("Неизвестная ошибка!", exc_info=True)
+                logging.error("Поймали очередной таймаут, (тип %s), но тут не страшно", type(ex))
+                time.sleep(60)  # скорей всего сетевая проблема, ждём
+            logging.error("Неизвестная ошибка!", exc_info=ex)
 
 
 def endless_sending():
@@ -156,7 +153,7 @@ threading.Thread(target=background_ticks, daemon=True).start()
 threading.Thread(target=endless_sending, daemon=True).start()
 
 bot.infinity_polling(
-    timeout=10,
+    timeout=30,
     long_polling_timeout=envs.STATE.read_timeout * 2,
     interval=3,  # из базового polling
     logger_level=logging.WARNING,
