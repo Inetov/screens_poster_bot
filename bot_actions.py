@@ -113,6 +113,7 @@ def save_biggest_image(envs: MyEnvs, sizes: list[PhotoSize] | None):
     new_path = Path(f"{envs.UPLOADED_DIR}/{file_info.file_unique_id}{suffix}")
     if not new_path.exists():  # предполагаем, что id таки уникальный
         downloaded_file = envs.BOT.download_file(file_info.file_path)
+
         with open(new_path, "wb") as new_file:
             new_file.write(downloaded_file)
 

@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 from pathlib import Path
 
 from telebot.apihelper import ApiTelegramException
@@ -8,19 +9,24 @@ import bot_actions
 import image_processing as imp
 from my_envs import MyEnvs
 
+logger = logging.getLogger(__name__)
 
 def process_one_image(image_path: str | Path, envs: MyEnvs):
     if isinstance(image_path, str):
         image_path = Path(image_path)
 
+    debug_path = None
     if envs.CROP_DEBUG:
         # Создаём файлы сравнений и сохраняем в TEMP_DIR
-        debug_path = Path(envs.TEMP_DIR, image_path.name)
-        imp.create_debug_image(image_path.as_posix(), debug_path.as_posix())
+        # тут делаем имя удобным, в других местах в этом нет смысла,
+        # так как работа с файлами напрямую не предполагается
+        dt_file_name = datetime.now().strftime(r"%Y%m%d-%H%M%S_%f")
+        debug_path = Path(envs.TEMP_DIR, dt_file_name).with_suffix(image_path.suffix).as_posix()
 
     queue_path = Path(envs.QUEUE_DIR, image_path.name)
-    imp.create_cropped_image(image_path.as_posix(), queue_path.as_posix())
-    image_path.unlink()
+    imp.create_cropped_image(image_path.as_posix(), queue_path.as_posix(), debug_path=debug_path)
+    if queue_path.exists() and queue_path.stat().st_size > 0:  # изображение создалось
+        image_path.unlink()
     return queue_path.as_posix()
 
 
@@ -89,12 +95,12 @@ def update_pinned_message(envs: MyEnvs):
             else:
                 to_wait_str = "НЕТ ЗНАЧЕНИЯ"
 
-            logging.warning("Похоже, что нас забанил сервер! Ждать: %s\n%s", to_wait_str, repr(ex))
+            logger.warning("Похоже, что нас забанил сервер! Ждать: %s\n%s", to_wait_str, repr(ex))
             # TODO: может добавить ожидание прям тут?
             return
 
         # но сюда же, видимо, попадаем и при других ошибках, надо бы отладить:
-        logging.error(
+        logger.error(
             "Поймали ошибку из обёртки, при обновлении закрепа:",
             exc_info=ex,
         )

@@ -9,6 +9,8 @@ import bot_actions
 from my_envs import MyEnvs
 from queue_processor import process_one_image
 
+logger = logging.getLogger(__name__)
+
 
 def send_queue_to_channel(envs: MyEnvs, count: int):
     """ Отправляет в канал указанное количество изображений.
@@ -40,7 +42,8 @@ def process_message(message: Message, envs: MyEnvs):
         processed_path = process_one_image(src_path, envs)
         if exists(processed_path):
             # add telebot.apihelper.ApiTelegramException
-            envs.BOT.delete_message(chat_id, message.message_id)
+            if envs.BOT.delete_message(chat_id, message.message_id):
+                logger.info("Получили и успешно сохранили картинку")
     else:
         match isinstance(message.text, str) and message.text.lower():
             case "/help":
