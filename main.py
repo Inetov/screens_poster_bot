@@ -156,7 +156,7 @@ bot.infinity_polling(
     timeout=30,
     long_polling_timeout=envs.STATE.read_timeout * 2,
     interval=3,  # из базового polling
-    logger_level=logging.WARNING,
+    logger_level=None,
     restart_on_change=True,
     path_to_watch=__file__,
 )
