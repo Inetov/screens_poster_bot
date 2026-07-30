@@ -4,6 +4,9 @@ import cv2
 import numpy as np
 
 logger = logging.getLogger(__name__)
+crop_logger = logger.getChild("crop")
+crop_logger.setLevel("INFO")  # в основном этот логгер использует DEBUG
+
 
 def create_cropped_image(source_path: str, dest_path: str, debug_path: str | None = None):
     """Создаёт обрезанную картинку и сохраняет её в файл.
@@ -15,10 +18,10 @@ def create_cropped_image(source_path: str, dest_path: str, debug_path: str | Non
     """
     img = cv2.imread(source_path)
 
-    logger.debug(
+    crop_logger.debug(
         "Обработка изображения с выдачей в '%s'", dest_path, extra={"debug_path": debug_path}
     )
-    logger.debug("Попытка обрезать навигационную панель")
+    crop_logger.debug("Попытка обрезать навигационную панель")
 
     img_without_nav_panel = _remove_navigation_bar(
         img,
@@ -28,7 +31,6 @@ def create_cropped_image(source_path: str, dest_path: str, debug_path: str | Non
         dark_ratio_threshold=0.75,
         white_threshold=180,
         min_button_area=290,  # на текущей: ☐:438 ◯:444 ◁:312
-        show_debug=False,
     )
 
     # сохраняем только обрезку нав.панели, чёрный фон далее и так удаляется без проблем
@@ -93,16 +95,13 @@ def _crop_sreenshot_black_bg(
     return cropped_image
 
 
-def _count_navigation_buttons(
-    region: np.ndarray, white_threshold: int, min_area: int, show_debug: bool = False
-) -> int:
+def _count_navigation_buttons(region: np.ndarray, white_threshold: int, min_area: int) -> int:
     """Подсчитывает количество светлых элементов (кнопок) в тёмной области.
 
     Args:
         region (np.ndarray): Область изображения для анализа (BGR)
         white_threshold (int, optional): Порог яркости для определения светлых элементов
         min_area (int, optional): Минимальная площадь элемента (условная, не пиксели)
-        show_debug (bool, optional): Показать отладочную информацию
 
     Returns:
         int: Количество обнаруженных элементов
@@ -123,14 +122,20 @@ def _count_navigation_buttons(
         area = cv2.contourArea(contour)
         if area >= min_area:
             valid_contours.append(contour)
-            if show_debug:
-                x, y, w, h = cv2.boundingRect(contour)
-                print(f"  Найден элемент: площадь={area:.0f}, размер={w}x{h}px, позиция=({x}, {y})")
+
+            x, y, w, h = cv2.boundingRect(contour)
+            crop_logger.debug(
+                "  Найден элемент: площадь=%.0f, размер=%dx%dpx, позиция=(%d, %d)",
+                area,
+                w,
+                h,
+                x,
+                y,
+            )
 
     button_count = len(valid_contours)
 
-    if show_debug:
-        print(f"  Всего контуров: {len(contours)}, валидных: {button_count}")
+    crop_logger.debug("  Всего контуров: %d, валидных: %d", len(contours), button_count)
 
     return button_count
 
@@ -143,7 +148,6 @@ def _remove_navigation_bar(
     dark_ratio_threshold: float = 0.75,
     white_threshold: int = 180,
     min_button_area: int = 290,
-    show_debug: bool = False,
 ) -> cv2.typing.MatLike:
     """Обнаруживает и обрезает навигационную панель Android внизу скриншота.
 
@@ -155,11 +159,12 @@ def _remove_navigation_bar(
         dark_ratio_threshold (float, optional): минимальная доля тёмных пикселей в строке (0-1)
         white_threshold (int, optional): порог яркости для определения светлых элементов (кнопок)
         min_button_area (int, optional): минимальная площадь кнопки (относительная, не понятно в чём)
-        show_debug (bool, optional): печатать отладочную информацию
 
     Returns:
         cv2.typing.MatLike: обрезанное изображение
     """
+
+    crop_logger.debug("Запущен метод обрезки навигационной панели")
 
     # Загружаем изображение
     img = src_image.copy()
@@ -192,12 +197,11 @@ def _remove_navigation_bar(
         # 2. Средняя яркость очень низкая
         is_dark[i] = (dark_ratio >= dark_ratio_threshold) or (mean_brightness <= threshold * 0.8)
 
-    if show_debug:
-        print("Анализ строк (снизу вверх):")
-        for i in range(len(is_dark) - 1, max(len(is_dark) - 20, -1), -1):
-            status = "ТЁМНАЯ" if is_dark[i] else "светлая"
-            mean_val = np.mean(gray_bottom[i, :])
-            print(f"  Строка {i}: {status} (средняя яркость: {mean_val:.1f})")
+    crop_logger.debug("Анализ строк (снизу вверх):")
+    for i in range(len(is_dark) - 1, max(len(is_dark) - 20, -1), -1):
+        status = "ТЁМНАЯ" if is_dark[i] else "светлая"
+        mean_val = np.mean(gray_bottom[i, :])
+        crop_logger.debug("  Строка %d: %s (средняя яркость: %.1f)", i, status, mean_val)
 
     # Ищем непрерывную тёмную область снизу
     # Идём снизу вверх и находим, где заканчивается тёмная область
@@ -234,32 +238,40 @@ def _remove_navigation_bar(
             # Проверка наличия навигационных кнопок
             button_region = bottom_region[crop_at:, :]
             button_count = _count_navigation_buttons(
-                button_region, white_threshold, min_button_area, show_debug
+                button_region, white_threshold, min_button_area
             )
 
             # Ожидаем 3-4 кнопки (или 1 для жест-навигации)
             if button_count in [1, 3, 4]:
                 result_img = img[:crop_line, :]
                 cropped_pixels = height - crop_line
-                print(f"✓ Обнаружена навигационная панель с {button_count} кнопками")
-                print(
-                    f"  Обрезано: {cropped_pixels} пикселей ({cropped_pixels / height * 100:.1f}%)"
+                crop_logger.debug("✓ Обнаружена навигационная панель с %d кнопками", button_count)
+                crop_logger.debug(
+                    "  Обрезано: %d пикселей (%.1f%%)",
+                    cropped_pixels,
+                    cropped_pixels / height * 100,
                 )
-                print(f"  Средняя яркость панели: {mean_bar_brightness:.1f}")
+                crop_logger.debug("  Средняя яркость панели: %.1f", mean_bar_brightness)
             else:
                 result_img = img
-                print(
-                    f"✗ Панель не обрезана: обнаружено {button_count} элементов (ожидается 1, 3 или 4)"
+                crop_logger.debug(
+                    "✗ Панель не обрезана: обнаружено %d элементов (ожидается 1, 3 или 4)",
+                    button_count,
                 )
-                print("  Возможно, это текст или другой контент, а не навигационные кнопки")
+
+                crop_logger.debug(
+                    "  Возможно, это текст или другой контент, а не навигационные кнопки"
+                )
+
         else:
             result_img = img
-            print(
-                f"✗ Панель не обнаружена (область недостаточно тёмная: {mean_bar_brightness:.1f})"
+            crop_logger.debug(
+                "✗ Панель не обнаружена (область недостаточно тёмная: %.1f)", mean_bar_brightness
             )
+
     else:
         result_img = img
-        print("✗ Навигационная панель не обнаружена")
+        crop_logger.debug("✗ Навигационная панель не обнаружена")
 
     return result_img
 

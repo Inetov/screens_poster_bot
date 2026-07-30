@@ -22,6 +22,7 @@ def process_one_image(image_path: str | Path, envs: MyEnvs):
         # так как работа с файлами напрямую не предполагается
         dt_file_name = datetime.now().strftime(r"%Y%m%d-%H%M%S_%f")
         debug_path = Path(envs.TEMP_DIR, dt_file_name).with_suffix(image_path.suffix).as_posix()
+        imp.crop_logger.setLevel("DEBUG")
 
     queue_path = Path(envs.QUEUE_DIR, image_path.name)
     imp.create_cropped_image(image_path.as_posix(), queue_path.as_posix(), debug_path=debug_path)

@@ -1,10 +1,13 @@
+import logging
+from collections.abc import Sequence
 from pathlib import Path
 from subprocess import getoutput
-from typing import Sequence
 
 from telebot.types import InputMediaPhoto, Message, PhotoSize
 
 from my_envs import MyEnvs
+
+logger = logging.getLogger(__name__)
 
 _HELP_MESSAGE = """
 Обрезает получаемые картинки и сохраняет в очередь.
@@ -49,7 +52,7 @@ def get_queue_images(envs: MyEnvs, count=10, with_caption=False, delete=False) -
      Не более 10 за раз. """
 
     # не будем возвращать больше 10 за раз
-    number_to_display = count if count <= 10 else 10
+    number_to_display = min(count, 10)
 
     result = []
     queue_files = list(envs.QUEUE_DIR.glob(envs.IMAGES_GLOB_PATTERN))
@@ -85,8 +88,10 @@ def remove_status_message(envs: MyEnvs):
         envs.BOT.delete_message(**msg_args)
         envs.STATE.state_status_message_id = 0
     except Exception as ex:
-        print(ex)
-
+        logger.exception(
+            "Ошибка при попытке удалить статус-сообщение:",
+            exc_info=ex,
+        )
 
 def delete_next_pin_message(message: Message, envs: MyEnvs):
     """ Предназначен для использования в функции
